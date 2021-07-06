@@ -10,7 +10,7 @@ module.exports = [
     port: get('database.port'),
     username: get('database.username'),
     synchronize: false,
-    logging: false,
+    logging: true,
     options: {
       encrypt: true,
     },

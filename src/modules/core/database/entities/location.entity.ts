@@ -1,9 +1,28 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CreateRoomBookingDto } from 'src/modules/locations/locations.dto';
+import {
+  Column,
+  Entity,
+  EntityManager,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Booking } from './booking.entity';
 import { Room } from './rooms.entity';
 
 @Entity('locations')
 export class Location {
+  public static async getAvailableRoomsCount(
+    data: CreateRoomBookingDto,
+    manager: EntityManager,
+  ) {
+    const { locationId, roomType, from, to } = data;
+    const [{ count: availableCount }] = await manager.query(`
+        SELECT public.get_available_rooms_count('${locationId}', '${roomType}', '${from}', '${to}') as count;
+      `);
+
+    return availableCount;
+  }
+
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
