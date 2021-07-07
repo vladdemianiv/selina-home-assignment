@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Body,
   Controller,
   Get,
   HttpCode,
@@ -10,7 +9,10 @@ import {
 } from '@nestjs/common';
 import { IResponse } from 'src/dto';
 import { Location } from '../core/database/entities/location.entity';
-import { GetRoomsParamsDecorator } from './decorators/get-rooms-params.decorator';
+import {
+  CreateRoomBookingDataDecorator,
+  GetRoomsParamsDecorator,
+} from './decorators/get-rooms-params.decorator';
 import {
   CreateRoomBookingDto,
   GetLocationParamsDto,
@@ -54,7 +56,7 @@ export class LocationsController {
   @Post(':id/room/:type/booking')
   @HttpCode(HttpStatus.CREATED)
   public async handleCreateRoomBooking(
-    @Body() params: CreateRoomBookingDto,
+    @CreateRoomBookingDataDecorator() params: CreateRoomBookingDto,
   ): Promise<IResponse<string>> {
     try {
       const data = await this.locationsService.createRoomBooking(params);
