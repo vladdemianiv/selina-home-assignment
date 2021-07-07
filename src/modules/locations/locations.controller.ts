@@ -8,11 +8,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { IResponse } from 'src/dto';
+import { Location } from '../core/database/entities/location.entity';
 import { GetRoomsParamsDecorator } from './decorators/get-rooms-params.decorator';
 import {
   CreateRoomBookingDto,
   GetLocationParamsDto,
   GetRoomsParamsDto,
+  PopulatedRoomDto,
 } from './locations.dto';
 import { LocationsService } from './locations.service';
 
@@ -22,7 +25,9 @@ export class LocationsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  public async handleGetLocations(@Query() params: GetLocationParamsDto) {
+  public async handleGetLocations(
+    @Query() params: GetLocationParamsDto,
+  ): Promise<IResponse<Location[]>> {
     try {
       const data = await this.locationsService.handleGetLocations(params);
 
@@ -36,9 +41,9 @@ export class LocationsController {
   @HttpCode(HttpStatus.OK)
   public async handleGetRooms(
     @GetRoomsParamsDecorator() params: GetRoomsParamsDto,
-  ) {
+  ): Promise<IResponse<PopulatedRoomDto[]>> {
     try {
-      const data = await this.locationsService.handleGetRooms(params); // to do
+      const data = await this.locationsService.handleGetRooms(params);
 
       return data;
     } catch (e) {
@@ -48,7 +53,9 @@ export class LocationsController {
 
   @Post(':id/room/:type/booking')
   @HttpCode(HttpStatus.CREATED)
-  public async handleCreateRoomBooking(@Body() params: CreateRoomBookingDto) {
+  public async handleCreateRoomBooking(
+    @Body() params: CreateRoomBookingDto,
+  ): Promise<IResponse<string>> {
     try {
       const data = await this.locationsService.createRoomBooking(params);
 

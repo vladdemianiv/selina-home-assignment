@@ -6,10 +6,16 @@ import {
   CreateRoomBookingDto,
   GetLocationParamsDto,
   GetRoomsParamsDto,
+  PopulatedRoomDto,
 } from './locations.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booking } from '../core/database/entities/booking.entity';
 import { Room } from '../core/database/entities/rooms.entity';
+import {
+  BOOKING_CREATED_SUCCESS,
+  ROOM_NOT_AVAILABLE_ERROR_MESSAGE,
+} from './locations.constants';
+import { IResponse } from 'src/dto';
 
 @Injectable()
 export class LocationsService {
@@ -21,7 +27,9 @@ export class LocationsService {
     private readonly connection: Connection,
   ) {}
 
-  public async handleGetLocations(params: GetLocationParamsDto) {
+  public async handleGetLocations(
+    params: GetLocationParamsDto,
+  ): Promise<IResponse<Location[]>> {
     const [data, count] = await this.locationsRepository.findAndCount(
       transformPagingFiltersToOrm(params),
     );
@@ -32,11 +40,21 @@ export class LocationsService {
     };
   }
 
-  public async createRoomBooking(data: CreateRoomBookingDto) {
-    return this.performBookingTransaction(data);
+  public async createRoomBooking(
+    data: CreateRoomBookingDto,
+  ): Promise<IResponse<string>> {
+    try {
+      await this.performBookingTransaction(data);
+
+      return {
+        data: BOOKING_CREATED_SUCCESS,
+      };
+    } catch ({ message }) {
+      throw new BadRequestException(message);
+    }
   }
 
-  private performBookingTransaction(data: CreateRoomBookingDto) {
+  private performBookingTransaction(data: CreateRoomBookingDto): Promise<void> {
     return this.connection.transaction(async (manager) => {
       try {
         const availableCount = await Location.getAvailableRoomsCount(
@@ -45,7 +63,7 @@ export class LocationsService {
         );
         console.log(availableCount);
         if (availableCount < 1) {
-          throw new Error('This room is no longer available.');
+          throw new Error(ROOM_NOT_AVAILABLE_ERROR_MESSAGE);
         }
         const bookingsRepository = manager.getRepository<Booking>(Booking);
         await bookingsRepository.insert(data);
@@ -55,7 +73,9 @@ export class LocationsService {
     });
   }
 
-  public async handleGetRooms(params: GetRoomsParamsDto) {
+  public async handleGetRooms(
+    params: GetRoomsParamsDto,
+  ): Promise<IResponse<PopulatedRoomDto[]>> {
     const { locationId, from, to } = params;
     const rooms = await this.roomsRepository.find({ where: { locationId } });
     const populatedData = await this.populateRoomsWithAvailableCount(
@@ -72,7 +92,7 @@ export class LocationsService {
     rooms: Room[],
     from: string,
     to: string,
-  ) {
+  ): Promise<PopulatedRoomDto[]> {
     const promises = rooms.map(async (room) => {
       const availableCount = await Location.getAvailableRoomsCount(
         {

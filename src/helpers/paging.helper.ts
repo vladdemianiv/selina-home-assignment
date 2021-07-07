@@ -3,7 +3,7 @@ import { FindManyOptions } from 'typeorm';
 
 export const transformPagingFiltersToOrm = (
   filters: PagingFiltersDto,
-): FindManyOptions<any> => {
+): FindManyOptions => {
   const { page, perPage } = filters;
 
   return {

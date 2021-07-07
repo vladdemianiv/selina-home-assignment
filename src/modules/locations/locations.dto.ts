@@ -15,3 +15,12 @@ export class CreateRoomBookingDto {
   locationId: string;
   roomType: RoomTypes;
 }
+
+export class RoomDto {
+  locationId: string;
+  type: RoomTypes;
+  count: number;
+}
+export class PopulatedRoomDto extends RoomDto {
+  availableCount: number;
+}
